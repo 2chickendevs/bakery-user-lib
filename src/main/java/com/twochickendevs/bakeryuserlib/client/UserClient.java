@@ -1,6 +1,6 @@
 package com.twochickendevs.bakeryuserlib.client;
 
-import com.twochickendevs.bakeryuserlib.model.ApiResponse;
+import com.twochickendevs.bakerycommonlib.model.ApiResponse;
 import com.twochickendevs.bakeryuserlib.model.UserInfo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpHeaders;
