@@ -10,17 +10,36 @@
     </parent>
 	<artifactId>bakery-user-lib</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>bakery-user-lib</name>
-	<description>Authentication lib</description>
-	<properties>
+    <packaging>jar</packaging>
+    <name>bakery-user-lib</name>
+    <description>Authentication lib</description>
+    <properties>
 		<java.version>25</java.version>
 	</properties>
 	<dependencies>
-
+        <dependency>
+            <groupId>com.twochickendevs</groupId>
+            <artifactId>bakery-common-lib</artifactId>
+        </dependency>
 	</dependencies>
 
-	<build>
-
-	</build>
+    <build>
+        <plugins>
+            <plugin>
+                <!--SKIP BUILDING SPRING BOOT SO THAT OTHER MODULES CAN IMPORT AS LIBRARY-->
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bakery-parent-lib</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
