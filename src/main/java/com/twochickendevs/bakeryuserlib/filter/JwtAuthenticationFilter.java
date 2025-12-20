@@ -30,22 +30,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (StringUtils.isNoneBlank(token)) {
-            UserInfo userInfo = userService.getUserInfo(token);
-            if (userInfo != null) {
-                UserAuthenticationToken authenticationToken = new UserAuthenticationToken(userInfo);
-
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            } else {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write(AppConstant.UNAUTHORIZED_MESSAGE);
-                return;
-            }
-        } else {
+        if (StringUtils.isBlank(token)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token not found");
             return;
         }
+
+        UserInfo userInfo = userService.getUserInfo(token);
+        if (userInfo == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(AppConstant.UNAUTHORIZED_MESSAGE);
+            return;
+        }
+
+        UserAuthenticationToken authenticationToken = new UserAuthenticationToken(userInfo);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         filterChain.doFilter(request, response);
     }

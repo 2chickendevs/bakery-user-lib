@@ -26,7 +26,7 @@ import java.util.List;
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig {
 
-    private final AuthEntryPointJwt unauthorizedHandler;
+    private final UnauthorizeEntryPointJwt unauthorizedHandler;
 
     @Value("${allowed.urls}")
     private String allowedUrls;
