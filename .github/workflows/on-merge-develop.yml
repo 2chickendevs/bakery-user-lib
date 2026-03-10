@@ -1,0 +1,99 @@
+name: Build Package
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  packages: write
+  contents: read
+
+env:
+  GITHUB_REGISTRY_USER: ${{ secrets.GHRC_USER }}
+  GITHUB_REGISTRY_TOKEN: ${{ secrets.GHRC_TOKEN }}
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Maven settings.xml
+        run: |
+          mkdir -p "$HOME/.m2"
+          cat .github/deploy/settings.xml > "$HOME/.m2/settings.xml"
+
+      - name: Read pom.xml info
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          GROUP=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)
+          ARTIFACT=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+          
+          PACKAGE_NAME="$GROUP.$ARTIFACT"
+          
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+          
+          echo "Detected version: $VERSION"
+          echo "Detected package: $PACKAGE_NAME"
+
+      - name: Get package versions
+        run: |
+          OWNER=${{ github.repository_owner }}
+          
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GHRC_TOKEN }}" \
+            "https://api.github.com/orgs/$OWNER/packages/maven/$PACKAGE_NAME/versions")
+          
+          echo "$RESPONSE"
+          
+          TYPE=$(echo "$RESPONSE" | jq -r 'type')
+          
+          if [ "$TYPE" = "object" ]; then
+            COUNT=0
+            VERSION_ID=""
+          else
+            COUNT=$(echo "$RESPONSE" | jq 'length')
+            VERSION_ID=$(echo "$RESPONSE" | jq -r --arg VERSION "$VERSION" '.[] | select(.name==$VERSION) | .id')
+          fi
+          
+          echo "COUNT=$COUNT" >> $GITHUB_ENV
+          echo "VERSION_ID=$VERSION_ID" >> $GITHUB_ENV
+          
+          echo "Version count: $COUNT"
+          echo "Version id: $VERSION_ID"
+
+      - name: Delete package version
+        if: env.VERSION_ID != '' && env.COUNT != '1'
+        run: |
+          OWNER=${{ github.repository_owner }}
+          
+          curl -L \
+            -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GHRC_TOKEN }}" \
+            "https://api.github.com/orgs/$OWNER/packages/maven/$PACKAGE_NAME/versions/$VERSION_ID"
+
+      - name: Delete whole package
+        if: env.VERSION_ID != '' && env.COUNT == '1'
+        run: |
+          OWNER=${{ github.repository_owner }}
+          
+          curl -L \
+            -X DELETE \
+            -H "Authorization: Bearer ${{ secrets.GHRC_TOKEN }}" \
+            "https://api.github.com/orgs/$OWNER/packages/maven/$PACKAGE_NAME"
+
+      - name: Build package
+        run: mvn clean package
+
+      - name: Deploy package
+        run: mvn deploy
