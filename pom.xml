@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.twochickendevs</groupId>
 	<artifactId>bakery-user-lib</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
     <packaging>jar</packaging>
     <name>bakery-user-lib</name>
     <description>Authentication lib</description>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>com.twochickendevs</groupId>
             <artifactId>bakery-common-lib</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
         </dependency>
     </dependencies>
 
